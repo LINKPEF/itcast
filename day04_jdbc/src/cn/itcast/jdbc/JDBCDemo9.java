@@ -1,6 +1,6 @@
 package cn.itcast.jdbc;
 
-import cn.itcast.util.JDBCUtilsPmcis;
+import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.*;
 import java.util.Scanner;
@@ -46,7 +46,7 @@ public class JDBCDemo9 {
         ResultSet rs=null;
         //1.获取连接
         try {
-             conn= JDBCUtilsPmcis.getConnection();
+             conn= JDBCUtilsTestResult.getConnection();
             //2.定义sql
             String sql="select * from user where username= '"+username+"'and password ='"+password+"'";
             //3.获取执行sql的对象
@@ -64,7 +64,7 @@ public class JDBCDemo9 {
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
-            JDBCUtilsPmcis.close(rs,stmt,conn);
+            JDBCUtilsTestResult.close(rs,stmt,conn);
         }
 
         return false;
@@ -82,7 +82,7 @@ public class JDBCDemo9 {
         ResultSet rs=null;
         //1.获取连接
         try {
-            conn= JDBCUtilsPmcis.getConnection();
+            conn= JDBCUtilsTestResult.getConnection();
             //2.定义sql
             String sql="select * from user where username=? and password =?";
           /*  //3.获取执行sql的对象
@@ -104,7 +104,7 @@ public class JDBCDemo9 {
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
-            JDBCUtilsPmcis.close(rs,pstmt,conn);
+            JDBCUtilsTestResult.close(rs,pstmt,conn);
         }
 
         return false;

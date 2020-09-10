@@ -1,11 +1,10 @@
 package cn.itcast.domain;
 
 import cn.itcast.util.JDBCUtilsMcm;
-import cn.itcast.util.JDBCUtilsPmcis;
+import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Statinplat {
     public static void main(String[] args) throws SQLException {
@@ -18,7 +17,7 @@ public class Statinplat {
 
         Connection connectionMcm = JDBCUtilsMcm.getConnection();
 
-        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        Connection connectionPmcis = JDBCUtilsTestResult.getConnection();
 
 
         //查询主表 的所有主键

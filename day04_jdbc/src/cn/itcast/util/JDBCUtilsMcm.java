@@ -44,7 +44,7 @@ public class JDBCUtilsMcm {
            URL res=classLoader.getResource("mcm.properties");
             String path=res.getPath();
             System.out.println(path);*/
-            ClassLoader classLoader = JDBCUtilsPmcis.class.getClassLoader();
+            ClassLoader classLoader = JDBCUtilsTestResult.class.getClassLoader();
             URL res  = classLoader.getResource("mcm.properties");
             String path = res.toURI().getPath();//URL对象转换成字符串前，先调用toURI()方法
            // System.out.println(path);

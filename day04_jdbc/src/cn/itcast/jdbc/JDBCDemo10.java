@@ -1,6 +1,6 @@
 package cn.itcast.jdbc;
 
-import cn.itcast.util.JDBCUtilsPmcis;
+import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,7 +16,7 @@ public class JDBCDemo10 {
         PreparedStatement pstmt2=null;
         try {
             //1.获取连接
-            conn = JDBCUtilsPmcis.getConnection();
+            conn = JDBCUtilsTestResult.getConnection();
             //开启事务：
             conn.setAutoCommit(false);
             //2.定义sql
@@ -52,8 +52,8 @@ public class JDBCDemo10 {
             }
             e.printStackTrace();
         }finally {
-            JDBCUtilsPmcis.close(pstmt1,conn);
-            JDBCUtilsPmcis.close(pstmt2,conn);
+            JDBCUtilsTestResult.close(pstmt1,conn);
+            JDBCUtilsTestResult.close(pstmt2,conn);
         }
     }
 }

@@ -14,7 +14,7 @@ import java.util.Properties;
  * 如果路径中存在空格，则会报如下错误，
  * https://blog.csdn.net/qq_38454176/article/details/104101972
  */
-public class JDBCUtilsPmcis {
+public class JDBCUtilsTestResult {
     /**
      * 3.使用配置文件：第十四行代码开始
      * 文件的读取，只需要读取一次即可拿到这些值，使用静态代码块
@@ -45,10 +45,10 @@ public class JDBCUtilsPmcis {
             String path=res.getPath();
             System.out.println(path);*/
             ClassLoader classLoader = JDBCUtilsTestResult.class.getClassLoader();
-            URL res  = classLoader.getResource("pmcis.properties");
+            URL res  = classLoader.getResource("TestResult.properties");
             String path = res.toURI().getPath();//URL对象转换成字符串前，先调用toURI()方法
             System.out.println(path);
-           // pro.load(JDBCUtils.class.getResourceAsStream("mcm.properties"));
+            // pro.load(JDBCUtils.class.getResourceAsStream("mcm.properties"));
             pro.load(new FileReader(path));
             //3.获取属性赋值
             url=pro.getProperty("url");

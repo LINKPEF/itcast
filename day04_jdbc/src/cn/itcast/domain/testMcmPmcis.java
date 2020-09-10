@@ -1,16 +1,13 @@
 package cn.itcast.domain;
 
 import cn.itcast.util.JDBCUtilsMcm;
-import cn.itcast.util.JDBCUtilsPmcis;
+import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
-public class test {
+public class testMcmPmcis {
 
     public static void main(String[] args) {
 
@@ -26,7 +23,9 @@ public class test {
         Statement stmtMcm = null;
         Statement stmtPmcis = null;
         Connection connectionMcm = JDBCUtilsMcm.getConnection();
-        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+
+
+        Connection connectionPmcis = JDBCUtilsTestResult.getConnection();
 
         stmtMcm = connectionMcm.createStatement();
         stmtPmcis = connectionPmcis.createStatement();
@@ -84,8 +83,7 @@ public class test {
                     } else {
                         System.out.println("台站关系不一致");
                     }
-                }
-                else {
+                } else {
                     //TODO 如果没有记录呢？？？？
                     System.out.println("没有记录");
                 }
@@ -120,7 +118,7 @@ public class test {
             //一个statement对象 对应一个resultset对象
             Statement stmtMcm1 = connectionMcm.createStatement();
             Statement stmtPmcis1 = connectionPmcis.createStatement();
-            String mcmSnetQuerySql = "SELECT GROUP_CONCAT(C_SNET_ID) AS mcmSnet FROM tab_omin_cm_cc_stationplat " +
+            String mcmSnetQuerySql = "SELECT group_concat(C_SNET_ID) AS mcmSnet FROM tab_omin_cm_cc_stationplat " +
                     "a JOIN tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID WHERE a.C_INDEXNBR = '" + c_indexnbr + "' GROUP BY a.C_INDEXNBR";
             //得到执行结果
             ResultSet resultmcmSnetQuery = stmtMcm1.executeQuery(mcmSnetQuerySql);
@@ -192,14 +190,14 @@ public class test {
             //                观测量
             //        SELECT
             //                -- 			b.*,c.*
-            //                GROUP_CONCAT(C_OBSQ_ID) as mcmObsq
+            //                GROUP_CONCAT(C_OBSQ_ID) as mcmOb sq
             //        FROM
             //        tab_omin_cm_cc_stationplat a
             //        JOIN tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID
             //        JOIN tab_omin_cm_cc_obsqstationnetship c on b.C_SNETSHIP_ID = c.C_SNETSHIP_ID
             //        where a.C_INDEXNBR = '05087' and C_SNET_ID = '0001'
             //        GROUP BY C_SNET_ID
-            String sqlmcmObsq = "SELECT GROUP_CONCAT(C_OBSQ_ID) AS mcmObsq FROM tab_omin_cm_cc_stationplat a" +
+            String sqlmcmObsq = "SELECT group_concat(C_OBSQ_ID) AS mcmObsq FROM tab_omin_cm_cc_stationplat a" +
                     " JOIN tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
                     "JOIN tab_omin_cm_cc_obsqstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE a.C_INDEXNBR = '" + c_indexnbr +
                     "' AND C_SNET_ID = '" + c_snet_id + "' GROUP BY C_SNET_ID ";
@@ -246,7 +244,7 @@ public class test {
                     System.out.println(strresultsqlpmcisObsq);
                 }
             }
-            }
+        }
 
         //
         //

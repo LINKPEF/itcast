@@ -1,7 +1,7 @@
 package cn.itcast.jdbc;
 
 import cn.itcast.domain.Emp;
-import cn.itcast.util.JDBCUtilsPmcis;
+import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class JDBCDemo8 {
         List<Emp> list=null;
         try {
 
-            conn= JDBCUtilsPmcis.getConnection();
+            conn= JDBCUtilsTestResult.getConnection();
             //3.定义sql
             String sql="select * from emp";
             //4.获取执行sql的对象
@@ -69,7 +69,7 @@ public class JDBCDemo8 {
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
-            JDBCUtilsPmcis.close(rs,stmt,conn);
+            JDBCUtilsTestResult.close(rs,stmt,conn);
         }
         return list;
     }
