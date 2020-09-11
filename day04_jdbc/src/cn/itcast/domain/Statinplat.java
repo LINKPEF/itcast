@@ -1,6 +1,7 @@
 package cn.itcast.domain;
 
 import cn.itcast.util.JDBCUtilsMcm;
+import cn.itcast.util.JDBCUtilsPmcis;
 import cn.itcast.util.JDBCUtilsTestResult;
 
 import java.sql.*;
@@ -17,11 +18,11 @@ public class Statinplat {
 
         Connection connectionMcm = JDBCUtilsMcm.getConnection();
 
-        Connection connectionPmcis = JDBCUtilsTestResult.getConnection();
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
 
 
         //查询主表 的所有主键
-        String sql_stationplat = "select C_SITEOPF_ID,C_INDEXNBR from  tab_omin_cm_cc_stationplat";
+        String sql_stationplat = "select C_SITEOPF_ID,C_INDEXNBR from  tab_omin_cm_cc_stationplat limit 1200";
 
         //查询tab_omin_cm_cc_datum_station表的记录
         String sql_datum_station = "select * from  tab_omin_cm_cc_datum_station";

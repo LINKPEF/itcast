@@ -33,22 +33,22 @@ public class XGJDBCUtilsMdm {
             Properties pro=new Properties();
 
             //2.加载文件
-            /*java.io.FileNotFoundException: src\mcm.properties (系统找不到指定的路径。)
+            /*java.io.FileNotFoundException: src\mmd.properties (系统找不到指定的路径。)
             原因是我们写的是相对路径，应该写个绝对路径，但是写绝对路径我们修改路径后这里也需要更改*/
-            //pro.load(new FileReader("src/mcm.properties"));
+            //pro.load(new FileReader("src/mmd.properties"));
 
             //2.通过获取src路径下文件的方式---》ClassLoader(类加载器）,URL是统一资源标识定位符
 
            /* 类路径出现错误的时候说明这个地方类路径存在转义后空格
            ClassLoader classLoader=JDBCUtils.class.getClassLoader();
-           URL res=classLoader.getResource("mcm.properties");
+           URL res=classLoader.getResource("mmd.properties");
             String path=res.getPath();
             System.out.println(path);*/
             ClassLoader classLoader = XGJDBCUtilsMdm.class.getClassLoader();
             URL res  = classLoader.getResource("xuguMDM.properties");
             String path = res.toURI().getPath();//URL对象转换成字符串前，先调用toURI()方法
             //System.out.println(path);
-            // pro.load(JDBCUtils.class.getResourceAsStream("mcm.properties"));
+            // pro.load(JDBCUtils.class.getResourceAsStream("mmd.properties"));
             pro.load(new FileReader(path));
             //3.获取属性赋值
             url=pro.getProperty("url");
