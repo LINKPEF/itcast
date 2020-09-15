@@ -66,9 +66,6 @@ public class Statinplat {
 
             ResultSet resultPmcisStation = stmtPmcis.executeQuery("select * from tab_omin_cm_cc_stationplat where C_INDEXNBR = '" + str + "'");
             //比较
-
-
-
         }
 
         System.out.println(list.size());

@@ -10,7 +10,7 @@ import java.util.Scanner;
 123
 请输入密码
 a' or 'a' = 'a
-/C:/Users/123/Documents/Tencent Files/755607262/FileRecv/itcast/out/production/day04_jdbc/mmd.properties
+/C:/Users/123/Documents/Tencent Files/755607262/FileRecv/itcast/out/production/day04_jdbc/standarMmd.properties
 登录成功
 1.通过键盘录入用户名和密码
 2.判断用户是否登入成功
