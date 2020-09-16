@@ -3,6 +3,7 @@ package cn.itcast.domain;
 import cn.itcast.util.JDBCUtilsPmcis;
 import cn.itcast.util.JDBCUtilsTestResult;
 import cn.itcast.util.XGJDBCUtilsMdm;
+import cn.itcast.util.XGMmdStandar;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -21,8 +22,14 @@ public class testMmdPmcis {
 
     public static void main(String[] args) {
         try {
-          //  combinationArstationnetship();
-          //  testStationnetshipMmdMain();
+           // combinationRadarstationnetshipMmdMain();
+//            combinationRadarstationnetshipPmcisMain();
+
+//            combinationRadistationnetshipMmdMain();
+//            combinationRadistationnetshipPmcisMain();
+//            combinationUparstationnetshipPmcis();
+//            combinationArstationnetship();
+            //  testStationnetshipMmdMain();
             //  stationnetshipPmcisMain();
             //test();
             //  pmcisMore();
@@ -32,11 +39,14 @@ public class testMmdPmcis {
     }
 
     /**
-     * 组合mmd和pmcis的酸雨、台站关系表辅助表
+     * done
+     * 14 高空气球探空仪探测站、台站关系表 tab_omin_cm_cc_uparstationnetship
+     *
+     * @throws SQLException
      */
-    public static void combinationArstationnetship() throws SQLException {
+    public static void combinationUparstationnetshipMmd() throws SQLException {
         //虚谷
-        Connection connectionMmd = XGJDBCUtilsMdm.getConnection();
+        Connection connectionMmd = XGMmdStandar.getConnection();
         // pmcis
         Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
         //
@@ -44,32 +54,966 @@ public class testMmdPmcis {
         Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
         String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
                 "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
-                "JOIN tab_omin_cm_cc_arstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  limit 500";
+                "JOIN tab_omin_cm_cc_uparstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID limit 1000 offset 0";
+        System.out.println(selectSql);
         Statement mmdStatement = connectionMmd.createStatement();
-        Statement pmcisStatement = connectionPmcis.createStatement();
-        Statement testResultStatementStatement = connectionTestResult.createStatement();
-
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
 
         ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
-        while(resultSetMmd.next()){
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
             String c_indexnbr = resultSetMmd.getString(1);
             String c_snet_id = resultSetMmd.getString(2);
 
-            String selectSqlArstation = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_uparstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            //   System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_uparstationnetshipvalues values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 21; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                //  System.out.println("都存在记录"+j+insertSql.toString());
+                // resultStatement.execute(insertSql.toString());
+            } else if (!mmdArValid && pmcisArValid) {
+//                System.out.println("mmd不存在记录pmcsi存在"+j);
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 21; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                //  System.out.println(insertSql.toString());
+                //  resultStatement.execute("mmd不存在记录pmcsi存在"+j+insertSql.toString());
+            } else if (mmdArValid && !pmcisArValid) {
+//                System.out.println("mmd存在记录pmcis不存在"+j);
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 21; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                // System.out.println("mmd存在记录pmcis不存在"+j+insertSql.toString());
+                // resultStatement.execute(insertSql.toString());
+            } else {
+                System.out.println(selectSqlArstation);
+            }
+            insertSql.delete(0, insertSql.length());
+            System.out.println(j);
+        }
+    }
+
+
+    /**done
+     * 14 高空气球探空仪探测站、台站关系表 tab_omin_cm_cc_uparstationnetship
+     *
+     * @throws SQLException
+     */
+    public static void combinationUparstationnetshipPmcis() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_uparstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID limit 17000 offset 4154";
+        // System.out.println(selectSql);
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_uparstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_uparstationnetshipvalues values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            if (!mmdArValid && pmcisArValid) {
+                //  System.out.println("mmd不存在记录pmcsi存在"+j);
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 21; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql.toString());
+                resultStatement.execute(insertSql.toString());
+                //  resultStatement.execute("mmd不存在记录pmcsi存在"+j+insertSql.toString());
+            }
+            System.out.println(j);
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**done
+     * 13、辐射观测站、台站关系表 tab_omin_cm_cc_radistationnetship
+     *
+     * @throws SQLException
+     */
+    public static void combinationRadistationnetshipMmdMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_radistationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlradistation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_radistationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND b.c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlradistation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlradistation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlradistation);
+            insertSql.append("insert into combination_radistationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                System.out.println("都存在记录"+j);
+                for (int i = 1; i < 22; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 22; i < 27; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+            } else if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 22; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 22; i < 27; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                System.out.println("mmd不存在记录pmcsi存在" + j);
+            } else if (mmdArValid && !pmcisArValid) {
+                for (int i = 1; i < 22; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 22; i < 27; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                System.out.println("mmd存在记录pmcis不存在" + j);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * @throws SQLException
+     */
+    public static void combinationRadistationnetshipPmcisMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_radistationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlradistation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_radistationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND b.c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlradistation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlradistation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlradistation);
+            insertSql.append("insert into combination_radistationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+//          pmcsi存在 mmd不存在
+            if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 22; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 22; i < 27; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                System.out.println("mmd不存在记录pmcsi存在" + j);
+                resultStatement.execute(insertSql.toString());
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**done
+     * 12、雷达台站、站网关系表 tab_omin_cm_cc_radarstationnetship
+     *
+     * @throws SQLException
+     */
+    public static void combinationRadarstationnetshipMmdMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_radarstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_radarstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id+"'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_radarstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 8; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 8; i < 13; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+            } else if (!mmdArValid && pmcisArValid) {
+//System.out.println("都存在记录"+j);
+                for (int i = 1; i < 8; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 8; i < 13; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                System.out.println("mmd不存在记录pmcsi存在" + j);
+            } else if (mmdArValid && !pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 8; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 8; i < 13; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                System.out.println("mmd存在记录pmcis不存在" + j);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * 12、雷达台站、站网关系表 tab_omin_cm_cc_radarstationnetship
+     *
+     * @throws SQLException
+     */
+    public static void combinationRadarstationnetshipPmcisMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_radarstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_radarstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_radarstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            if (!mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 8; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 8; i < 13; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                System.out.println("mmd不存在记录pmcsi存在" + j);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * 气成分观测站、台站关系表
+     *
+     * @throws SQLException
+     */
+    // tab_omin_cm_cc_cawnstationnetship
+    public static void combinationCawnstationnetshipMmdMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_cawnstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID ";
+
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_cawnstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_cawnstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 25; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 25; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (mmdArValid && !pmcisArValid) {
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 25; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * 气成分观测站、台站关系表
+     *
+     * @throws SQLException
+     */
+    // tab_omin_cm_cc_cawnstationnetship
+    public static void combinationCawnstationnetshipPmcisMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_cawnstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_cawnstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_cawnstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 17; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 17; i < 25; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * 地面台站扩展表
+     *
+     * @throws SQLException
+     */
+    public static void combinationAwsstationnetshipMmdMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_awsstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  0";
+
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_awsstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_awsstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 12; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 12; i < 15; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 12; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 12; i < 15; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (mmdArValid && !pmcisArValid) {
+                for (int i = 1; i < 12; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 12; i < 15; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * 地面台站扩展表
+     *
+     * @throws SQLException
+     */
+    public static void combinationAwsstationnetshipPmcisMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_awsstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_awsstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_awsstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 12; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 12; i < 15; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+        }
+    }
+
+    /**
+     * 合并自动土壤水分扩展表
+     *
+     * @throws SQLException
+     */
+    public static void combinationAsmstationnetshipMmdMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_asmstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement testResultStatementStatement = connectionTestResult.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_asmstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_asmstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 68; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 68; i < 75; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 68; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 68; i < 75; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            } else if (mmdArValid && !pmcisArValid) {
+                for (int i = 1; i < 68; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append("null,");
+                }
+                //MMD多的字段
+                for (int i = 68; i < 75; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+    /**
+     * 合并自动土壤水分扩展表
+     *
+     * @throws SQLException
+     */
+    public static void combinationAsmstationnetshipPmcisMain() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_asmstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+
+        Statement pmcisStatement = connectionPmcis.createStatement();
+        Statement testResultStatementStatement = connectionTestResult.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetPmcis.next()) {
+            j++;
+            String c_indexnbr = resultSetPmcis.getString(1);
+            String c_snet_id = resultSetPmcis.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
+                    "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
+                    "tab_omin_cm_cc_asmstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_asmstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
+
+             if (!mmdArValid && pmcisArValid) {
+                for (int i = 1; i < 68; i++) {
+                    insertSql.append("null,");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 68; i < 75; i++) {
+                    insertSql.append("null,");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+            }
+            insertSql.delete(0, insertSql.length());
+        }
+    }
+
+    /**
+     * done 完成  两个库中的记录数一致 认为没必要以pmcis为主进行比较
+     * 组合mmd和pmcis的酸雨、台站关系表扩展表
+     */
+    public static void combinationArstationnetship() throws SQLException {
+        //虚谷
+        Connection connectionMmd = XGMmdStandar.getConnection();
+        // pmcis
+        Connection connectionPmcis = JDBCUtilsPmcis.getConnection();
+        //
+        // resulttest
+        Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
+        String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
+                "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
+                "JOIN tab_omin_cm_cc_arstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
+        Statement mmdStatement = connectionMmd.createStatement();
+        Statement testResultStatementStatement = connectionTestResult.createStatement();
+        Statement mmdStatement1 = connectionMmd.createStatement();
+        Statement pmcisStatement1 = connectionPmcis.createStatement();
+        Statement resultStatement = connectionTestResult.createStatement();
+        insertSql = new StringBuilder();
+
+        ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
+        int j = 0;
+        while (resultSetMmd.next()) {
+            j++;
+            String c_indexnbr = resultSetMmd.getString(1);
+            String c_snet_id = resultSetMmd.getString(2);
+
+            String selectSqlArstation = "SELECT c.* FROM tab_omin_cm_cc_stationplat a JOIN " +
                     "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID JOIN " +
                     "tab_omin_cm_cc_arstationnetship c ON b.C_SNETSHIP_ID = c.C_SNETSHIP_ID WHERE" +
-                    " a.c_indexnbr = '"+c_indexnbr+"' AND c_snet_id = '"+c_indexnbr+"'";
+                    " a.c_indexnbr = '" + c_indexnbr + "' AND c_snet_id = '" + c_snet_id + "'";
+            System.out.println(selectSqlArstation);
+            //得到两个库中酸雨扩展表的记录
+            //  System.out.println(selectSqlArstation);
+            ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
+            ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
+            insertSql.append("insert into combination_arstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            boolean mmdArValid = resultSetMmdAr.next();
+            boolean pmcisArValid = resultSetPmcisAr.next();
 
-
-
+            //都存在记录
+            if (mmdArValid && pmcisArValid) {
+                //System.out.println("都存在记录"+j);
+                for (int i = 1; i < 9; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
+                }
+                //MMD多的字段
+                for (int i = 9; i < 14; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                insertSql.delete(insertSql.length() - 1, insertSql.length());
+                insertSql.append(")");
+                System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+            } else if (!mmdArValid && pmcisArValid) {
+                System.out.println("mmd不存在记录pmcsi存在" + j);
+            } else if (mmdArValid && !pmcisArValid) {
+                System.out.println("mmd存在记录pmcis不存在" + j);
+            }
+            insertSql.delete(0, insertSql.length());
         }
-
-
         //ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
-       // StringBuilder insertSql = new StringBuilder("insert into combination_arstationnetship values(null,");
-
-
+        // StringBuilder insertSql = new StringBuilder("insert into combination_arstationnetship values(null,");
     }
+
 
     /**
      * 比较Stationnetship 以mmd的台站号为准
