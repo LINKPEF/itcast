@@ -9,10 +9,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import static java.lang.System.exit;
 
+/**
+ * 台站表的比较正式版
+ */
 public class stationplatStandar {
     static Statement stmtMdm = null;
     static Statement stmtPmcis = null;
@@ -26,6 +30,8 @@ public class stationplatStandar {
         } catch (Exception e) {
             e.printStackTrace();
         }
+//        HashMap<Object, Object> map = new HashMap<>();
+//        map.put(    ,    )
     }
 
     /**

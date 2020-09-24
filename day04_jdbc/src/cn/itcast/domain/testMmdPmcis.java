@@ -22,6 +22,14 @@ public class testMmdPmcis {
 
     public static void main(String[] args) {
         try {
+            combinationAsmstationnetshipMmdMain();
+          //  combinationAsmstationnetshipPmcisMain();
+
+//            combinationAwsstationnetshipMmdMain();
+         //   combinationAwsstationnetshipPmcisMain();
+
+//            combinationCawnstationnetshipMmdMain();
+          //  combinationCawnstationnetshipPmcisMain();
            // combinationRadarstationnetshipMmdMain();
 //            combinationRadarstationnetshipPmcisMain();
 
@@ -78,7 +86,7 @@ public class testMmdPmcis {
             //  System.out.println(selectSqlArstation);
             ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
             ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
-            insertSql.append("insert into combination_uparstationnetshipvalues values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            insertSql.append("insert into combination_uparstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
             boolean mmdArValid = resultSetMmdAr.next();
             boolean pmcisArValid = resultSetPmcisAr.next();
 
@@ -174,7 +182,7 @@ public class testMmdPmcis {
             //  System.out.println(selectSqlArstation);
             ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
             ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
-            insertSql.append("insert into combination_uparstationnetshipvalues values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+            insertSql.append("insert into combination_uparstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
             boolean mmdArValid = resultSetMmdAr.next();
             boolean pmcisArValid = resultSetPmcisAr.next();
 
@@ -506,7 +514,7 @@ public class testMmdPmcis {
         }
     }
 
-    /**
+    /**done
      * 气成分观测站、台站关系表
      *
      * @throws SQLException
@@ -553,41 +561,57 @@ public class testMmdPmcis {
             //都存在记录
             if (mmdArValid && pmcisArValid) {
                 //System.out.println("都存在记录"+j);
-                for (int i = 1; i < 17; i++) {
+                for (int i = 1; i < 7; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 //MMD多的字段
-                for (int i = 17; i < 25; i++) {
+                for (int i = 7; i < 10; i++)  {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                for (int i = 7; i < 12; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i+3) == null ? "null," : "'" + resultSetMmdAr.getString(i+3) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
             } else if (!mmdArValid && pmcisArValid) {
-                for (int i = 1; i < 17; i++) {
-                    insertSql.append("null,");
+                for (int i = 1; i < 7; i++) {
+                    insertSql.append("null," );
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 //MMD多的字段
-                for (int i = 17; i < 25; i++) {
-                    insertSql.append("null,");
+                for (int i = 7; i < 10; i++)  {
+                    insertSql.append("null," );
+                }
+                for (int i = 7; i < 12; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i+3) == null ? "null," : "'" + resultSetMmdAr.getString(i+3) + "',");
+                    insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+
             } else if (mmdArValid && !pmcisArValid) {
-                for (int i = 1; i < 17; i++) {
+                for (int i = 1; i < 7; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                     insertSql.append("null,");
                 }
                 //MMD多的字段
-                for (int i = 17; i < 25; i++) {
+                for (int i = 7; i < 10; i++)  {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
+                }
+                for (int i = 7; i < 12; i++) {
+                    insertSql.append(resultSetMmdAr.getString(i+3) == null ? "null," : "'" + resultSetMmdAr.getString(i+3) + "',");
+                    insertSql.append("null,");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
             }
             insertSql.delete(0, insertSql.length());
         }
@@ -633,11 +657,11 @@ public class testMmdPmcis {
             //  System.out.println(selectSqlArstation);
             ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
             ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
-            insertSql.append("insert into combination_cawnstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
             boolean mmdArValid = resultSetMmdAr.next();
             boolean pmcisArValid = resultSetPmcisAr.next();
 
             if (!mmdArValid && pmcisArValid) {
+                insertSql.append("insert into combination_cawnstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
                 for (int i = 1; i < 17; i++) {
                     insertSql.append("null,");
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
@@ -649,12 +673,13 @@ public class testMmdPmcis {
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                insertSql.delete(0, insertSql.length());
             }
-            insertSql.delete(0, insertSql.length());
         }
     }
 
-    /**
+    /**done
      * 地面台站扩展表
      *
      * @throws SQLException
@@ -669,7 +694,7 @@ public class testMmdPmcis {
         Connection connectionTestResult = JDBCUtilsTestResult.getConnection();
         String selectSql = "SELECT a.C_INDEXNBR, b.C_SNET_ID FROM tab_omin_cm_cc_stationplat a JOIN " +
                 "tab_omin_cm_cc_stationnetship b ON a.C_SITEOPF_ID = b.C_SITEOPF_ID " +
-                "JOIN tab_omin_cm_cc_awsstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  0";
+                "JOIN tab_omin_cm_cc_awsstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
 
         Statement mmdStatement = connectionMmd.createStatement();
         Statement mmdStatement1 = connectionMmd.createStatement();
@@ -680,7 +705,7 @@ public class testMmdPmcis {
         ResultSet resultSetMmd = mmdStatement.executeQuery(selectSql);
         int j = 0;
         while (resultSetMmd.next()) {
-            j++;
+            System.out.println(++j);
             String c_indexnbr = resultSetMmd.getString(1);
             String c_snet_id = resultSetMmd.getString(2);
 
@@ -700,41 +725,45 @@ public class testMmdPmcis {
             //都存在记录
             if (mmdArValid && pmcisArValid) {
                 //System.out.println("都存在记录"+j);
-                for (int i = 1; i < 12; i++) {
+                for (int i = 1; i < 17; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 //MMD多的字段
-                for (int i = 12; i < 15; i++) {
+                for (int i = 17; i < 25; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
             } else if (!mmdArValid && pmcisArValid) {
-                for (int i = 1; i < 12; i++) {
+                for (int i = 1; i < 17; i++) {
                     insertSql.append("null,");
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 //MMD多的字段
-                for (int i = 12; i < 15; i++) {
+                for (int i = 17; i < 25; i++) {
                     insertSql.append("null,");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+
             } else if (mmdArValid && !pmcisArValid) {
-                for (int i = 1; i < 12; i++) {
+                for (int i = 1; i < 17; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                     insertSql.append("null,");
                 }
                 //MMD多的字段
-                for (int i = 12; i < 15; i++) {
+                for (int i = 17; i < 25; i++) {
                     insertSql.append(resultSetMmdAr.getString(i) == null ? "null," : "'" + resultSetMmdAr.getString(i) + "',");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
             }
             insertSql.delete(0, insertSql.length());
         }
@@ -779,27 +808,30 @@ public class testMmdPmcis {
             //  System.out.println(selectSqlArstation);
             ResultSet resultSetMmdAr = mmdStatement1.executeQuery(selectSqlArstation);
             ResultSet resultSetPmcisAr = pmcisStatement1.executeQuery(selectSqlArstation);
-            insertSql.append("insert into combination_awsstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
             boolean mmdArValid = resultSetMmdAr.next();
             boolean pmcisArValid = resultSetPmcisAr.next();
 
             if (!mmdArValid && pmcisArValid) {
-                for (int i = 1; i < 12; i++) {
+                insertSql.append("insert into combination_awsstationnetship values(null,'" + c_indexnbr + "','" + c_snet_id + "',");
+                for (int i = 1; i < 17; i++) {
                     insertSql.append("null,");
                     insertSql.append(resultSetPmcisAr.getString(i) == null ? "null," : "'" + resultSetPmcisAr.getString(i) + "',");
                 }
                 //MMD多的字段
-                for (int i = 12; i < 15; i++) {
+                for (int i = 17; i < 25; i++) {
                     insertSql.append("null,");
                 }
                 insertSql.delete(insertSql.length() - 1, insertSql.length());
                 insertSql.append(")");
                 System.out.println(insertSql);
+                resultStatement.execute(insertSql.toString());
+                insertSql.delete(0,insertSql.length());
             }
+            System.out.println(j);
         }
     }
 
-    /**
+    /**done
      * 合并自动土壤水分扩展表
      *
      * @throws SQLException
@@ -817,7 +849,6 @@ public class testMmdPmcis {
                 "JOIN tab_omin_cm_cc_asmstationnetship c  on  b.C_SNETSHIP_ID = c.C_SNETSHIP_ID  ";
 
         Statement mmdStatement = connectionMmd.createStatement();
-        Statement testResultStatementStatement = connectionTestResult.createStatement();
         Statement mmdStatement1 = connectionMmd.createStatement();
         Statement pmcisStatement1 = connectionPmcis.createStatement();
         Statement resultStatement = connectionTestResult.createStatement();
@@ -882,6 +913,7 @@ public class testMmdPmcis {
                 insertSql.append(")");
                 System.out.println(insertSql);
             }
+            resultStatement.execute(insertSql.toString());
             insertSql.delete(0, insertSql.length());
         }
     }
@@ -912,7 +944,7 @@ public class testMmdPmcis {
         ResultSet resultSetPmcis = pmcisStatement.executeQuery(selectSql);
         int j = 0;
         while (resultSetPmcis.next()) {
-            j++;
+            System.out.println(j++);
             String c_indexnbr = resultSetPmcis.getString(1);
             String c_snet_id = resultSetPmcis.getString(2);
 
@@ -942,6 +974,7 @@ public class testMmdPmcis {
                 insertSql.append(")");
                 System.out.println(insertSql);
             }
+            resultStatement.execute(insertSql.toString());
             insertSql.delete(0, insertSql.length());
         }
     }
