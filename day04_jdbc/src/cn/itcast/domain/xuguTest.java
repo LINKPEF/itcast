@@ -7,6 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * 测试连接虚谷数据库
+ */
 public class xuguTest {
     public static void main(String[] args) throws SQLException {
         Connection connection = XGJDBCUtilsMdm.getConnection();

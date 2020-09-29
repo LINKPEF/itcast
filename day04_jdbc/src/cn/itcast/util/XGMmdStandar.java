@@ -8,12 +8,10 @@ import java.sql.*;
 import java.util.Properties;
 
 /***
+ * 创建虚谷MMD标准库的连接工具类
  *
- * JDBC工具类
- * 工具类所有的方法一般是静态类
- * 如果路径中存在空格，则会报如下错误，
- * https://blog.csdn.net/qq_38454176/article/details/104101972
  */
+
 public class XGMmdStandar {
     /**
      * 3.使用配置文件：第十四行代码开始

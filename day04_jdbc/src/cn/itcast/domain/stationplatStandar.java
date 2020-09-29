@@ -15,7 +15,7 @@ import java.util.HashSet;
 import static java.lang.System.exit;
 
 /**
- * 台站表的比较正式版
+ * 台站表的比较工具类
  */
 public class stationplatStandar {
     static Statement stmtMdm = null;
@@ -30,11 +30,10 @@ public class stationplatStandar {
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        HashMap<Object, Object> map = new HashMap<>();
-//        map.put(    ,    )
     }
 
     /**
+     * 查出MMD库的数据 再查询pmcis的数据进行比较
      * @throws Exception
      */
     public static void stationplatMmdMain() throws Exception {
@@ -256,6 +255,9 @@ public class stationplatStandar {
         }
     }
 
+    /**
+     *     查出MMD库的数据 再查询pmcis的数据进行比较
+     */
     //pmcis 比 mmd多的
     public static void stationplatPmcisMain() throws SQLException {
         Connection connectionMmd = XGMmdStandar.getConnection();
@@ -265,7 +267,7 @@ public class stationplatStandar {
         stmtPmcis = connectionPmcis.createStatement();
         stmtTestResult = connectionTestResult.createStatement();
         ResultSet resultMmdStation;
-        //查找台站数据  先限制返回条数不然测试时间太长
+        //查找台站数据  先限制返回条数不然会不断创建新的resultset对象导致堆溢出
         ResultSet resultPmcisStationp = stmtPmcis.executeQuery("SELECT * FROM tab_omin_cm_cc_stationplat limit 30000 offset 120000 ");
         insertSql = new StringBuilder("");
         int j = 0;
@@ -302,7 +304,6 @@ public class stationplatStandar {
                 stmtTestResult.execute(insertSql.toString());
                 System.out.println("没有记录");
             }
-            resultMmdStation = null;
             if (j == 20000)
                 System.gc();
             insertSql.delete(0, insertSql.length());

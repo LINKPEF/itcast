@@ -7,12 +7,8 @@ import java.net.URL;
 import java.sql.*;
 import java.util.Properties;
 
-/***
- *
- * JDBC工具类
- * 工具类所有的方法一般是静态类
- * 如果路径中存在空格，则会报如下错误，
- * https://blog.csdn.net/qq_38454176/article/details/104101972
+/**
+ * 创建虚谷mmd测试库的工具类
  */
 public class XGJDBCUtilsMdm {
     /**

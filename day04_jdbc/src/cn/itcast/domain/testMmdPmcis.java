@@ -22,7 +22,7 @@ public class testMmdPmcis {
 
     public static void main(String[] args) {
         try {
-            combinationAsmstationnetshipMmdMain();
+              combinationAsmstationnetshipMmdMain();
           //  combinationAsmstationnetshipPmcisMain();
 
 //            combinationAwsstationnetshipMmdMain();
@@ -37,6 +37,7 @@ public class testMmdPmcis {
 //            combinationRadistationnetshipPmcisMain();
 //            combinationUparstationnetshipPmcis();
 //            combinationArstationnetship();
+
             //  testStationnetshipMmdMain();
             //  stationnetshipPmcisMain();
             //test();
